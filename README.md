@@ -1,0 +1,2 @@
+cqrs-course-solution
+====================
