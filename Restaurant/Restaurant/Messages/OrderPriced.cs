@@ -1,6 +1,6 @@
 using Restaurant.DomainModel;
 
-namespace Restaurant.Messages.Events
+namespace Restaurant.Messages
 {
     public class OrderPriced : Message
     {

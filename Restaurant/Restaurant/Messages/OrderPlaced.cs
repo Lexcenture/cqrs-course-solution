@@ -1,13 +1,16 @@
+﻿using System;
 using Restaurant.DomainModel;
 
-namespace Restaurant.Messages.Events
+namespace Restaurant.Messages
 {
-    public class OrderCompleted : Message
+    public class OrderPlaced : TimeToLiveMessage
     {
         private readonly OrderDocument _order;
-        public OrderCompleted(OrderDocument order)
+        
+        public OrderPlaced(OrderDocument order, DateTime expires)
         {
             _order = order;
+            Expire = expires;
         }
 
         public OrderDocument Order { get { return _order; } }

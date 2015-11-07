@@ -1,4 +1,5 @@
 ﻿using System;
+using Restaurant.DomainModel;
 using Restaurant.Messages;
 
 namespace Restaurant.Infrastructure

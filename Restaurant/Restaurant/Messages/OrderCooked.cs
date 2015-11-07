@@ -1,11 +1,11 @@
-using Restaurant.DomainModel;
+﻿using Restaurant.DomainModel;
 
-namespace Restaurant.Messages.Events
+namespace Restaurant.Messages
 {
-    public class OrderPaid : Message
+    public class OrderCooked : Message
     {
         private readonly OrderDocument _order;
-        public OrderPaid(OrderDocument order)
+        public OrderCooked(OrderDocument order)
         {
             _order = order;
         }
