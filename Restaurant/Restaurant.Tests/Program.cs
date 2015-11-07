@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Restaurant
+namespace Restaurant.Tests
 {
-    public interface IHandleOrder
+    class Program
     {
-        void Handle(OrderDocument order);
+        static void Main(string[] args)
+        {
+        }
     }
 }

@@ -1,29 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Restaurant
+namespace Restaurant.DomainModel
 {
-    public class Item
-    {
-        //public Item(int id, string descriptoin, int quantity, decimal price)
-        //{
-        //    Id = id;
-        //    Description = descriptoin;
-        //    Quantity = quantity;
-        //    Price = price;
-        //}
-        public int Id;
-        public string Description;
-        public int Quantity;
-        public decimal Price;
-    }
-
     public class OrderDocument
     {
         private readonly JObject jsonObject;
@@ -40,6 +21,7 @@ namespace Restaurant
             jsonObject["MillisecondsToCook"] = 0;
             jsonObject["Ingredients"] = new JArray();
         }
+
         public OrderDocument(string json)
         {
             jsonObject = JObject.Parse(json);
@@ -75,28 +57,28 @@ namespace Restaurant
             set { jsonObject["Tax"] = value; }
         }
 
-        public List<Item> GetItems()
+        public List<OrderItem> GetItems()
         {
             JArray jItems = (JArray)jsonObject["items"];
             return jItems.Select(jItem =>
             {
-                Item newItem = new Item();
-                newItem.Id = (int) jItem["Id"];
-                newItem.Description = (string) jItem["Description"];
-                newItem.Quantity = (int) jItem["Quantity"];
-                newItem.Price = (decimal) jItem["Price"];
-                return newItem;
+                OrderItem newOrderItem = new OrderItem();
+                newOrderItem.Id = (int) jItem["Id"];
+                newOrderItem.Description = (string) jItem["Description"];
+                newOrderItem.Quantity = (int) jItem["Quantity"];
+                newOrderItem.Price = (decimal) jItem["Price"];
+                return newOrderItem;
             }).ToList();
         }
 
-        public void AddItem(Item item)
+        public void AddItem(OrderItem orderItem)
         {
             JArray jItems = (JArray)jsonObject["items"];
             JObject jItem = new JObject();
-            jItem["Id"] = item.Id;
-            jItem["Description"] = item.Description;
-            jItem["Quantity"] = item.Quantity;
-            jItem["Price"] = item.Price;
+            jItem["Id"] = orderItem.Id;
+            jItem["Description"] = orderItem.Description;
+            jItem["Quantity"] = orderItem.Quantity;
+            jItem["Price"] = orderItem.Price;
             jItems.Add(jItem);
         }
 
@@ -117,6 +99,4 @@ namespace Restaurant
             return jsonObject.ToString();
         }
     }
-
-    
 }

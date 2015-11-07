@@ -1,19 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace Restaurant
+namespace Restaurant.DomainModel
 {
-    public class MenuItem
-    {
-        public int Id;
-        public string Description;
-        public List<string> Ingredients = new List<string>();
-        public decimal Price;
-    }
-
     public class Menu
     {
         private readonly Dictionary<int,MenuItem> mnu = new Dictionary<int, MenuItem>();
