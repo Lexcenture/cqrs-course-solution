@@ -17,6 +17,8 @@ namespace Restaurant.Host
     {
         private static List<IMonitorableQueue> queues;
         private static volatile bool KeepOnMonitoring;
+        private static int paidOrders = 0;
+        private static Cashier cashier;
 
         static void Main(string[] args)
         {
@@ -26,7 +28,7 @@ namespace Restaurant.Host
             Manager manager = new Manager();
             var managerQueue = new QueuedHandler<OrderCompleted>(manager, "Manager Queue");
 
-            Cashier cashier = new Cashier(bus);
+            cashier = new Cashier(bus);
             var cashierQueue = new QueuedHandler<PayForOrder>(cashier, "Cashier Queue");
 
             AssistantManager assistantManager = new AssistantManager(bus);
@@ -41,69 +43,54 @@ namespace Restaurant.Host
             Cook cook3 = new Cook(bus, 600);
             var cook3Queue = new QueuedHandler<CookOrder>(cook3, "Cook Queue3");
 
+            EvilActor evilActor = new EvilActor(bus);
+            
             var cookdispatcher = new QueueDispatcher<CookOrder>(new List<QueuedHandler<CookOrder>> { cook1Queue, cook2Queue, cook3Queue });
-            var dropper = new MessageDropper<CookOrder>(cookdispatcher);
-            var ttlh = new TimeToLiveHandler<CookOrder>(dropper);
-            var cookDispatcherQueue = new QueuedHandler<CookOrder>(ttlh, "Cook Dispatcher");
+            //var dropper = new MessageDropper<CookOrder>(cookdispatcher);
+            //var ttlh = new TimeToLiveHandler<CookOrder>(dropper);
+            var cookDispatcherQueue = new QueuedHandler<CookOrder>(cookdispatcher, "Cook Dispatcher");
 
             UkRestaurantProcessManagerPool processManagerPool = new UkRestaurantProcessManagerPool(bus);
             bus.Subscribe(processManagerPool);
 
+            AlarmClock<OrderPlaced> orderPlacedReminder = new AlarmClock<OrderPlaced>(bus);
             AlarmClock<CookOrder> cookReminder = new AlarmClock<CookOrder>(bus);
 
             Waiter waiter = new Waiter(bus, menu);
 
             var orderStatusBoard = new OrderStatusBoard();
-
+            
+            bus.Subscribe(orderPlacedReminder);
             bus.Subscribe(cookReminder);
             bus.Subscribe(cookDispatcherQueue);
             bus.Subscribe(assistantManagerQueue);
             bus.Subscribe(cashierQueue);
             bus.Subscribe(managerQueue);
-
-            var orders = Enumerable.Range(0, 100).Select(CreateOrder).ToArray();
-            var orderIds = orders.Select(order => order.Item1);
-
-            foreach (var orderId in orderIds.Take(1))
-            {
-                bus.SubscribleToCorrelationId<OrderPlaced>(orderId, orderStatusBoard);
-                bus.SubscribleToCorrelationId<OrderCooked>(orderId, orderStatusBoard);
-                bus.SubscribleToCorrelationId<OrderPriced>(orderId, orderStatusBoard);
-                bus.SubscribleToCorrelationId<OrderPaid>(orderId, orderStatusBoard);
-            }
-
+            bus.Subscribe(evilActor);
+            bus.Subscribe<HumanInterventionRequired>(manager);
 
             List<IStartable> startable = new List<IStartable> { managerQueue, cashierQueue, assistantManagerQueue, cook1Queue, cook2Queue, cook3Queue, cookDispatcherQueue };
             queues = new List<IMonitorableQueue>() { managerQueue, cashierQueue, assistantManagerQueue, cook1Queue, cook2Queue, cook3Queue, cookDispatcherQueue };
             startable.ForEach(s => s.Start());
 
-            Thread monitor = new Thread(Printout) { IsBackground = true };
+            //Thread monitor = new Thread(Printout) { IsBackground = true };
             KeepOnMonitoring = true;
-            monitor.Start();
+            //monitor.Start();
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            foreach (var order in orders)
+            for (int i = 0; i <= 20; i++)
             {
-                waiter.PlaceOrder(order.Item2, order.Item1);
+                Customer cust = new Customer(bus, waiter, cashier);
+                var orderId = cust.PlaceOrder();
+                //bus.SubscribleToCorrelationId<OrderPlaced>(orderId, orderStatusBoard);
+                //bus.SubscribleToCorrelationId<OrderCooked>(orderId, orderStatusBoard);
+                //bus.SubscribleToCorrelationId<OrderPriced>(orderId, orderStatusBoard);
+                //bus.SubscribleToCorrelationId<OrderPaid>(orderId, orderStatusBoard);
             }
 
-            int paidOrders = 0;
-            while (queues.Sum(q => q.Count) > 0)
-            {
-                try
-                {
-                    List<OrderDocument> toPayList = cashier.GetAvailableOrders();
-                    toPayList.ForEach(o =>
-                    {
-                        cashier.PayForOrder(o.Id);
-                        ++paidOrders;
-                    });
-                }
-                catch {}
-            }
-
+            Console.ReadLine();
             KeepOnMonitoring = false;
 
             sw.Stop();
@@ -120,18 +107,6 @@ namespace Restaurant.Host
                 queues.ForEach(q => Console.WriteLine("{0}: {1}", q.Name, q.Count));
                 Thread.Sleep(1000);
             }
-        }
-
-
-        private static Tuple<Guid, List<Tuple<int, int>>> CreateOrder(int i)
-        {
-            List<Tuple<int, int>> items = new List<Tuple<int, int>>();
-            items.Add(new Tuple<int, int>(1, 2));
-            items.Add(new Tuple<int, int>(2, 1));
-            items.Add(new Tuple<int, int>(3, 2));
-            items.Add(new Tuple<int, int>(4, 2));
-            Guid orderId = Guid.NewGuid();
-            return new Tuple<Guid, List<Tuple<int, int>>>(orderId, items);
         }
     }
 }

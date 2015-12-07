@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Policy;
 using System.Threading;
-using System.Threading.Tasks;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
 using Restaurant.Messages;
@@ -27,6 +26,12 @@ namespace Restaurant.Actors
         {
             OrderDocument order = orderPricedMessage.Order;
             unpaidOrders.Add(order.Id, orderPricedMessage);
+            _next.Publish(new OrderReadyForPayment(orderPricedMessage.Order)
+            {
+                MessageId = Guid.NewGuid(),
+                CorrelationId = orderPricedMessage.CorrelationId,
+                CausationId = orderPricedMessage.CausationId
+            });
         }
 
         public void PayForOrder(Guid orderId)
@@ -48,27 +53,6 @@ namespace Restaurant.Actors
         public List<OrderDocument> GetAvailableOrders()
         {
             return unpaidOrders.Select(x => x.Value.Order).ToList();
-        }
-
-    }
-
-    public class AlarmClock<T> : IHandle<RemindmeCommand<T>> where T : Message
-    {
-        private readonly Bus _bus;
-
-        public AlarmClock(Bus bus)
-        {
-            _bus = bus;
-        }
-
-        public void Handle(RemindmeCommand<T> message)
-        {
-            Task.Delay(message.Seconds*1000).ContinueWith(t => _bus.Publish(new RememberEvent<T>(message.Message)
-            {
-                MessageId = Guid.NewGuid(),
-                CorrelationId = message.Message.CorrelationId,
-                CausationId = message.Message.MessageId
-            }));
         }
 
     }

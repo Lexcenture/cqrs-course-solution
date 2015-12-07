@@ -48,21 +48,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Infrastructure\AlarmClock.cs" />
     <Compile Include="Actors\AssistantManager.cs" />
     <Compile Include="Actors\Cashier.cs" />
+    <Compile Include="Actors\Customer.cs" />
     <Compile Include="Actors\Cook.cs" />
+    <Compile Include="Actors\EvilActor.cs" />
     <Compile Include="DomainModel\MenuItem.cs" />
     <Compile Include="DomainModel\OrderItem.cs" />
     <Compile Include="Infrastructure\Dispatchers\TypeBus.cs" />
     <Compile Include="Infrastructure\MessageHandlers\MessageDropper.cs" />
+    <Compile Include="Infrastructure\ProcessManagers\UKRestaurantDodgyProcessManager.cs" />
     <Compile Include="Infrastructure\ProcessManagers\UKRestaurantProcessManager.cs" />
     <Compile Include="Infrastructure\ProcessManagers\UkRestaurantProcessManagerPool.cs" />
     <Compile Include="Messages\Commands\CookOrder.cs" />
     <Compile Include="Messages\Commands\PayForOrder.cs" />
     <Compile Include="Messages\Commands\PlaceOrder.cs" />
     <Compile Include="Messages\Commands\PriceOrder.cs" />
+    <Compile Include="Messages\Events\HumanInterventionRequired.cs" />
     <Compile Include="Messages\Events\OrderCompleted.cs" />
     <Compile Include="Messages\Events\OrderDropped.cs" />
+    <Compile Include="Messages\Events\OrderReadyForPayment.cs" />
     <Compile Include="Messages\TimeToLiveMessage.cs" />
     <Compile Include="Infrastructure\Dispatchers\Bus.cs" />
     <Compile Include="Infrastructure\MessageHandlers\IHandleOrder.cs" />

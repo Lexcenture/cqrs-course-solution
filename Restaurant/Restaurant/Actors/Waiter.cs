@@ -10,6 +10,8 @@ namespace Restaurant.Actors
     {
         private readonly Bus _bus;
         private readonly Menu _menu;
+        private Random rnd = new Random();
+
 
         public Waiter(Bus bus, Menu menu)
         {
@@ -20,6 +22,8 @@ namespace Restaurant.Actors
         public void PlaceOrder(IList<Tuple<int,int>> items, Guid orderId)
         {
             OrderDocument newOrder = new OrderDocument {Id = orderId};
+            newOrder.IsDodgy = (rnd.Next(0, 100) > 80);
+
             foreach (var item in items)
             {
                 MenuItem mItem = _menu.GetItem(item.Item1);

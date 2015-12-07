@@ -13,7 +13,16 @@ namespace Restaurant.Infrastructure.ProcessManagers
 
         public void Handle(OrderPlaced message)
         {
-            var processManager = new UkRestaurantProcessManager(_bus, message);
+            new UkRestaurantProcessManager(_bus, message);
+
+            //if (message.Order.IsDodgy)
+            //{
+            //    new UkRestaurantDodgyProcessManager(_bus, message);
+            //}
+            //else
+            //{
+            //    new UkRestaurantProcessManager(_bus, message);
+            //}
         }
     }
 }

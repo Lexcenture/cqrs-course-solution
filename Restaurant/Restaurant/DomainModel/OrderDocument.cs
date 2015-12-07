@@ -14,6 +14,7 @@ namespace Restaurant.DomainModel
             jsonObject = new JObject();
             jsonObject["items"] = new JArray();
             jsonObject["Paid"] = false;
+            IsDodgy = false;
             jsonObject["Id"] = Guid.NewGuid();
             jsonObject["SubTotal"] = 0m;
             jsonObject["Tax"] = 0m;
@@ -31,6 +32,11 @@ namespace Restaurant.DomainModel
         {
             get { return (bool)jsonObject["Paid"]; }
             set { jsonObject["Paid"] = value; }
+        }
+        public bool IsDodgy
+        {
+            get { return (bool)jsonObject["Dodgy"]; }
+            set { jsonObject["Dodgy"] = value; }
         }
 
         public Guid Id
