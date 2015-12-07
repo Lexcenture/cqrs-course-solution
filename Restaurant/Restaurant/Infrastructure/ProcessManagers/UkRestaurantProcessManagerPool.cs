@@ -13,11 +13,7 @@ namespace Restaurant.Infrastructure.ProcessManagers
 
         public void Handle(OrderPlaced message)
         {
-            var processManager = new UkRestaurantProcessManager(_bus);
-            _bus.SubscribleToCorrelationId<OrderCooked>(message.CorrelationId, processManager);
-            _bus.SubscribleToCorrelationId<OrderPriced>(message.CorrelationId, processManager);
-            _bus.SubscribleToCorrelationId<OrderPaid>(message.CorrelationId, processManager);
-            _bus.SubscribleToCorrelationId<OrderCompleted>(message.CorrelationId, processManager);
+            var processManager = new UkRestaurantProcessManager(_bus, message);
         }
     }
 }

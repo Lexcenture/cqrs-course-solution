@@ -6,6 +6,8 @@ using System.Threading;
 using Restaurant.Actors;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
+using Restaurant.Infrastructure.MessageHandlers;
+using Restaurant.Infrastructure.ProcessManagers;
 using Restaurant.Messages.Commands;
 using Restaurant.Messages.Events;
 
@@ -40,13 +42,20 @@ namespace Restaurant.Host
             var cook3Queue = new QueuedHandler<CookOrder>(cook3, "Cook Queue3");
 
             var cookdispatcher = new QueueDispatcher<CookOrder>(new List<QueuedHandler<CookOrder>> { cook1Queue, cook2Queue, cook3Queue });
-            var ttlh = new TimeToLiveHandler<CookOrder>(cookdispatcher);
+            var dropper = new MessageDropper<CookOrder>(cookdispatcher);
+            var ttlh = new TimeToLiveHandler<CookOrder>(dropper);
             var cookDispatcherQueue = new QueuedHandler<CookOrder>(ttlh, "Cook Dispatcher");
+
+            UkRestaurantProcessManagerPool processManagerPool = new UkRestaurantProcessManagerPool(bus);
+            bus.Subscribe(processManagerPool);
+
+            AlarmClock<CookOrder> cookReminder = new AlarmClock<CookOrder>(bus);
 
             Waiter waiter = new Waiter(bus, menu);
 
             var orderStatusBoard = new OrderStatusBoard();
 
+            bus.Subscribe(cookReminder);
             bus.Subscribe(cookDispatcherQueue);
             bus.Subscribe(assistantManagerQueue);
             bus.Subscribe(cashierQueue);

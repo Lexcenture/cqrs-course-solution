@@ -8,12 +8,14 @@ namespace Restaurant.Infrastructure
     public class Bus
     {
         //private Dictionary<string, List<IHandleOrder>> subscriptions = new Dictionary<string, List<IHandleOrder>>();
-        private Dictionary<string, List<Action<Message>>> _subscription; 
-        private Object synclock = new object();
+         
+        private Dictionary<string, Dictionary<int,Action<Message>>> _subscription;
+        private int subCount;
+        private readonly Object synclock = new object();
 
         public Bus()
         {
-            _subscription = new Dictionary<string, List<Action<Message>>>();
+            _subscription = new Dictionary<string, Dictionary<int,Action<Message>>>();
         }
 
         public void Publish<T>(T message) where T : Message
@@ -27,16 +29,33 @@ namespace Restaurant.Infrastructure
 
         private void Publish<T>(string topic, T message) where T : Message
         {
-            List<Action<Message>> subscribers;
+            Dictionary<int,Action<Message>> subscribers;
             if (_subscription.TryGetValue(topic, out subscribers))
             {
-                subscribers.ForEach(subscriber => subscriber(message));
+                subscribers.Values.ToList().ForEach(sub => sub(message));
             }
         }
 
-        public void SubscribleToCorrelationId<T>(Guid correlationId, IHandle<T> handler) where T : Message
+        public void UnsubscribeFromCorrelationId(Guid correlationId, int token)
         {
-            Subscribe(correlationId.ToString(), handler);
+            lock (synclock)
+            {
+                var clonedSubscribers = CloneSubscriptions();
+                Dictionary<int,Action<Message>> currentSubscriptions;
+                if (clonedSubscribers.TryGetValue(correlationId.ToString(), out currentSubscriptions))
+                {
+                    currentSubscriptions.Remove(token);
+                    if (currentSubscriptions.Count == 0)
+                    {
+                        clonedSubscribers.Remove(correlationId.ToString());
+                    }
+                }
+            }
+        }
+
+        public int SubscribleToCorrelationId<T>(Guid correlationId, IHandle<T> handler) where T : Message
+        {
+            return Subscribe(correlationId.ToString(), handler);
         }
 
         public void Subscribe<T>(IHandle<T> handler) where T : Message
@@ -44,15 +63,16 @@ namespace Restaurant.Infrastructure
             Subscribe(typeof(T).Name, handler);
         }
 
-        private void Subscribe<T>(string topic, IHandle<T> handler) where T : Message
+        private int Subscribe<T>(string topic, IHandle<T> handler) where T : Message
         {
             lock (synclock)
             {
                 var clonedSubscribers = CloneSubscriptions();
-                List<Action<Message>> currentSubscriptions;
+                Dictionary<int,Action<Message>> currentSubscriptions;
+                subCount++;
                 if (!clonedSubscribers.TryGetValue(topic, out currentSubscriptions))
                 {
-                    currentSubscriptions = new List<Action<Message>>();
+                    currentSubscriptions = new Dictionary<int, Action<Message>>();
                     clonedSubscribers[topic] = currentSubscriptions;
                 }
 
@@ -62,14 +82,15 @@ namespace Restaurant.Infrastructure
                     if (message != null) handler.Handle(message);
                 };
 
-                currentSubscriptions.Add(action);
+                currentSubscriptions.Add(subCount, action);
                 _subscription = clonedSubscribers;
             }
+            return subCount;
         }
 
-        private Dictionary<string, List<Action<Message>>> CloneSubscriptions()
+        private Dictionary<string, Dictionary<int,Action<Message>>> CloneSubscriptions()
         {
-            return _subscription.ToDictionary(pair => pair.Key, pair => new List<Action<Message>>(pair.Value));
+            return _subscription.ToDictionary(pair => pair.Key, pair => pair.Value.ToDictionary(ia => ia.Key, ia=>ia.Value));
         }
     }
 }
