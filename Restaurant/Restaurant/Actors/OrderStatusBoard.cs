@@ -1,6 +1,6 @@
 ﻿using System;
 using Restaurant.Infrastructure;
-using Restaurant.Messages;
+using Restaurant.Messages.Events;
 
 namespace Restaurant.Actors
 {

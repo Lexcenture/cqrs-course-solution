@@ -6,9 +6,10 @@ using System.Threading;
 using Restaurant.Actors;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
-using Restaurant.Messages;
+using Restaurant.Messages.Commands;
+using Restaurant.Messages.Events;
 
-namespace Restaurant
+namespace Restaurant.Host
 {
     class Program
     {
@@ -18,33 +19,31 @@ namespace Restaurant
         static void Main(string[] args)
         {
             Menu menu = new Menu();
-
             Bus bus = new Bus();
 
-
             Manager manager = new Manager();
-            var managerQueue = new QueuedHandler<OrderPaid>(manager, "Manager Queue");
+            var managerQueue = new QueuedHandler<OrderCompleted>(manager, "Manager Queue");
 
-            Cashier cashier = new Cashier(bus, "PaidOrder");
-            var cashierQueue = new QueuedHandler<OrderPriced>(cashier, "Cashier Queue");
+            Cashier cashier = new Cashier(bus);
+            var cashierQueue = new QueuedHandler<PayForOrder>(cashier, "Cashier Queue");
 
-            AssistantManager assistantManager = new AssistantManager(bus, "OrderWithTotal");
-            var assistantManagerQueue = new QueuedHandler<OrderCooked>(assistantManager, "Assistant Manager Queue");
+            AssistantManager assistantManager = new AssistantManager(bus);
+            var assistantManagerQueue = new QueuedHandler<PriceOrder>(assistantManager, "Assistant Manager Queue");
 
-            Cook cook1 = new Cook(bus, "CookedOrder", 200);
-            var cook1Queue = new QueuedHandler<OrderPlaced>(cook1, "Cook Queue1");
+            Cook cook1 = new Cook(bus, 200);
+            var cook1Queue = new QueuedHandler<CookOrder>(cook1, "Cook Queue1");
 
-            Cook cook2 = new Cook(bus, "CookedOrder", 400);
-            var cook2Queue = new QueuedHandler<OrderPlaced>(cook2, "Cook Queue2");
+            Cook cook2 = new Cook(bus, 400);
+            var cook2Queue = new QueuedHandler<CookOrder>(cook2, "Cook Queue2");
 
-            Cook cook3 = new Cook(bus, "CookedOrder", 600);
-            var cook3Queue = new QueuedHandler<OrderPlaced>(cook3, "Cook Queue3");
+            Cook cook3 = new Cook(bus, 600);
+            var cook3Queue = new QueuedHandler<CookOrder>(cook3, "Cook Queue3");
 
-            var cookdispatcher = new QueueDispatcher<OrderPlaced>(new List<QueuedHandler<OrderPlaced>> { cook1Queue, cook2Queue, cook3Queue });
-            var ttlh = new TimeToLiveHandler<OrderPlaced>(cookdispatcher);
-            var cookDispatcherQueue = new QueuedHandler<OrderPlaced>(ttlh, "Cook Dispatcher");
+            var cookdispatcher = new QueueDispatcher<CookOrder>(new List<QueuedHandler<CookOrder>> { cook1Queue, cook2Queue, cook3Queue });
+            var ttlh = new TimeToLiveHandler<CookOrder>(cookdispatcher);
+            var cookDispatcherQueue = new QueuedHandler<CookOrder>(ttlh, "Cook Dispatcher");
 
-            Waiter waiter = new Waiter(bus, "NewOrder", menu);
+            Waiter waiter = new Waiter(bus, menu);
 
             var orderStatusBoard = new OrderStatusBoard();
 
@@ -93,9 +92,7 @@ namespace Restaurant
                         ++paidOrders;
                     });
                 }
-                catch
-                {
-                }
+                catch {}
             }
 
             KeepOnMonitoring = false;

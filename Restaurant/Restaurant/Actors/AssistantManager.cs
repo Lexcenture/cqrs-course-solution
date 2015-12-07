@@ -2,21 +2,20 @@
 using System.Linq;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
-using Restaurant.Messages;
+using Restaurant.Messages.Commands;
+using Restaurant.Messages.Events;
 
 namespace Restaurant.Actors
 {
-    public class AssistantManager : IHandle<OrderCooked>
+    public class AssistantManager : IHandle<PriceOrder>
     {
-        private readonly string _publishOn;
         private readonly Bus _bus;
-        public AssistantManager(Bus bus, string publishOn)
+        public AssistantManager(Bus bus)
         {
-            _publishOn = publishOn;
             _bus = bus;
         }
 
-        public void Handle(OrderCooked meal)
+        public void Handle(PriceOrder meal)
         {
             OrderDocument order = meal.Order;
             order.SubTotal = order.GetItems().Sum(item => item.Price * item.Quantity);

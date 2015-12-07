@@ -2,24 +2,23 @@
 using System.Threading;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
-using Restaurant.Messages;
+using Restaurant.Messages.Commands;
+using Restaurant.Messages.Events;
 
 namespace Restaurant.Actors
 {
-    public class Cook : IHandle<OrderPlaced>
+    public class Cook : IHandle<CookOrder>
     {
         private readonly Bus _bus;
-        private readonly string _publishOn;
         private readonly int _sleep;
 
-        public Cook(Bus bus, string publishOn, int sleep)
+        public Cook(Bus bus, int sleep)
         {
             _bus = bus;
-            _publishOn = publishOn;
             _sleep = sleep;
         }
 
-        public void Handle(OrderPlaced newOrder)
+        public void Handle(CookOrder newOrder)
         {
             OrderDocument order = newOrder.Order;
             Thread.Sleep(_sleep);

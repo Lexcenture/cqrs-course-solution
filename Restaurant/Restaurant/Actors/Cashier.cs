@@ -3,23 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
-using Restaurant.Messages;
+using Restaurant.Messages.Commands;
+using Restaurant.Messages.Events;
 
 namespace Restaurant.Actors
 {
-    public class Cashier : IHandle<OrderPriced>
+    public class Cashier : IHandle<PayForOrder>
     {
         private readonly Bus _next;
-        private readonly string _paidorder;
-        private readonly Dictionary<Guid, OrderPriced> unpaidOrders = new Dictionary<Guid, OrderPriced>();
+        private readonly Dictionary<Guid, PayForOrder> unpaidOrders = new Dictionary<Guid, PayForOrder>();
 
-        public Cashier(Bus next, string paidorder)
+        public Cashier(Bus next)
         {
             _next = next;
-            _paidorder = paidorder;
         }
 
-        public void Handle(OrderPriced orderPricedMessage)
+        public void Handle(PayForOrder orderPricedMessage)
         {
             OrderDocument order = orderPricedMessage.Order;
             unpaidOrders.Add(order.Id, orderPricedMessage);
@@ -27,7 +26,7 @@ namespace Restaurant.Actors
 
         public void PayForOrder(Guid orderId)
         {
-            OrderPriced orderPriced;
+            PayForOrder orderPriced;
             if (unpaidOrders.TryGetValue(orderId, out orderPriced))
             {
                 orderPriced.Order.IsPaid = true;

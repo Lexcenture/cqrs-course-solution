@@ -33,9 +33,7 @@ namespace Restaurant.Infrastructure
 
         public void Handle(T order)
         {
-            while (!InternalHandle(order))
-            { }
+            while (!InternalHandle(order)){ }
         }
-
     }
 }
