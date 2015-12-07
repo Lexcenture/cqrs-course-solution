@@ -1,4 +1,5 @@
-﻿using Restaurant.Messages.Events;
+﻿using Restaurant.Infrastructure.Dispatchers;
+using Restaurant.Messages.Events;
 
 namespace Restaurant.Infrastructure.ProcessManagers
 {

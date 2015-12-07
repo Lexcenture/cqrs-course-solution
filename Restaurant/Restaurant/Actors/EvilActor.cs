@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Restaurant.Infrastructure;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages;
 using Restaurant.Messages.Events;
 

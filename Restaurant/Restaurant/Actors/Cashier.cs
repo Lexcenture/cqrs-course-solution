@@ -6,6 +6,7 @@ using System.Security.Policy;
 using System.Threading;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages;
 using Restaurant.Messages.Commands;
 using Restaurant.Messages.Events;

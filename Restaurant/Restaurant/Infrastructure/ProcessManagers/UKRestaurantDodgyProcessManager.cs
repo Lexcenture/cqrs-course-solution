@@ -1,5 +1,6 @@
 ﻿using System;
 using Restaurant.Actors;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages.Commands;
 using Restaurant.Messages.Events;
 
@@ -8,24 +9,23 @@ namespace Restaurant.Infrastructure.ProcessManagers
     public class UkRestaurantDodgyProcessManager : IHandle<OrderCooked>, IHandle<OrderPriced>, IHandle<OrderPaid>, IHandle<OrderCompleted>, IHandle<RememberEvent<CookOrder>>
     {
         private readonly Bus _bus;
-        private int OrderCookedToken;
-        private int OrderPricedToken;
-        private int OrderPaidToken;
-        private int OrderCompletedToken;
-        private Guid _correlationId;
-        private int ReminderToken;
-        private bool isFoodCooked = false;
+        private readonly int _orderCookedToken;
+        private readonly int _orderPricedToken;
+        private readonly int _orderPaidToken;
+        private readonly int _orderCompletedToken;
+        private readonly Guid _correlationId;
+        private readonly int _reminderToken;
+        private bool _isFoodCooked;
 
         public UkRestaurantDodgyProcessManager(Bus bus, OrderPlaced message)
         {
             _bus = bus;
             _correlationId = message.CorrelationId;
-            OrderCookedToken = _bus.SubscribleToCorrelationId<OrderCooked>(_correlationId, this);
-            OrderPricedToken = _bus.SubscribleToCorrelationId<OrderPriced>(_correlationId, this);
-            OrderPaidToken = _bus.SubscribleToCorrelationId<OrderPaid>(_correlationId, this);
-            OrderCompletedToken = _bus.SubscribleToCorrelationId<OrderCompleted>(_correlationId, this);
-            ReminderToken = _bus.SubscribleToCorrelationId<RememberEvent<CookOrder>>(_correlationId, this);
-
+            _orderCookedToken = _bus.SubscribleToCorrelationId<OrderCooked>(_correlationId, this);
+            _orderPricedToken = _bus.SubscribleToCorrelationId<OrderPriced>(_correlationId, this);
+            _orderPaidToken = _bus.SubscribleToCorrelationId<OrderPaid>(_correlationId, this);
+            _orderCompletedToken = _bus.SubscribleToCorrelationId<OrderCompleted>(_correlationId, this);
+            _reminderToken = _bus.SubscribleToCorrelationId<RememberEvent<CookOrder>>(_correlationId, this);
 
             var priceOrder = new PriceOrder(message.Order)
             {
@@ -34,12 +34,11 @@ namespace Restaurant.Infrastructure.ProcessManagers
                 CausationId = message.MessageId
             };
             _bus.Publish(priceOrder);
-
         }
 
         public void Handle(RememberEvent<CookOrder> message)
         {
-            if (!isFoodCooked)
+            if (!_isFoodCooked)
             {
                 _bus.Publish(new RemindmeCommand<CookOrder>(5, message.Message)
                 {
@@ -53,12 +52,12 @@ namespace Restaurant.Infrastructure.ProcessManagers
 
         public void Handle(OrderCooked message)
         {
-            if (isFoodCooked)
+            if (_isFoodCooked)
             {
                 Console.WriteLine("Food was cooked twice for dodgy customer: {0}", message.Order.Id);
             }
 
-            isFoodCooked = true;
+            _isFoodCooked = true;
             var orderCompleted = new OrderCompleted(message.Order)
             {
                 MessageId = Guid.NewGuid(),
@@ -77,7 +76,7 @@ namespace Restaurant.Infrastructure.ProcessManagers
                 CorrelationId = message.CorrelationId,
                 CausationId = message.MessageId
             };
-            _bus.Publish(payForOrder); ;
+            _bus.Publish(payForOrder);
         }
 
         public void Handle(OrderPaid message)
@@ -99,11 +98,11 @@ namespace Restaurant.Infrastructure.ProcessManagers
 
         public void Handle(OrderCompleted message)
         {
-            _bus.UnsubscribeFromCorrelationId(_correlationId, OrderCookedToken);
-            _bus.UnsubscribeFromCorrelationId(_correlationId, OrderPricedToken);
-            _bus.UnsubscribeFromCorrelationId(_correlationId, OrderPaidToken);
-            _bus.UnsubscribeFromCorrelationId(_correlationId, OrderCompletedToken);
-            _bus.UnsubscribeFromCorrelationId(_correlationId, ReminderToken);
+            _bus.UnsubscribeFromCorrelationId(_correlationId, _orderCookedToken);
+            _bus.UnsubscribeFromCorrelationId(_correlationId, _orderPricedToken);
+            _bus.UnsubscribeFromCorrelationId(_correlationId, _orderPaidToken);
+            _bus.UnsubscribeFromCorrelationId(_correlationId, _orderCompletedToken);
+            _bus.UnsubscribeFromCorrelationId(_correlationId, _reminderToken);
         }
 
     }

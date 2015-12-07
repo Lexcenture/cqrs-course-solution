@@ -80,7 +80,7 @@
     <Compile Include="Messages\Events\OrderPaid.cs" />
     <Compile Include="Messages\Events\OrderPlaced.cs" />
     <Compile Include="Messages\Events\OrderPriced.cs" />
-    <Compile Include="Actors\OrderStatusBoard.cs" />
+    <Compile Include="Actors\OrderReadModel.cs" />
     <Compile Include="Actors\Manager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Infrastructure\MessageHandlers\QueuedHandler.cs" />

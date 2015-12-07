@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Restaurant.Infrastructure;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages.Events;
 
 namespace Restaurant.Actors

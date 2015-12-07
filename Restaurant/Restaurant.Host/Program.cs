@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using Restaurant.Actors;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
-using Restaurant.Infrastructure.MessageHandlers;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Infrastructure.ProcessManagers;
 using Restaurant.Messages.Commands;
 using Restaurant.Messages.Events;
@@ -58,7 +57,7 @@ namespace Restaurant.Host
 
             Waiter waiter = new Waiter(bus, menu);
 
-            var orderStatusBoard = new OrderStatusBoard();
+            var orderReadModel = new OrderReadModel();
             
             bus.Subscribe(orderPlacedReminder);
             bus.Subscribe(cookReminder);
@@ -66,10 +65,10 @@ namespace Restaurant.Host
             bus.Subscribe(assistantManagerQueue);
             bus.Subscribe(cashierQueue);
             bus.Subscribe(managerQueue);
-            bus.Subscribe(evilActor);
+            //bus.Subscribe(evilActor);
             bus.Subscribe<HumanInterventionRequired>(manager);
 
-            List<IStartable> startable = new List<IStartable> { managerQueue, cashierQueue, assistantManagerQueue, cook1Queue, cook2Queue, cook3Queue, cookDispatcherQueue };
+            List<IStartable> startable = new List<IStartable> { managerQueue, cashierQueue, assistantManagerQueue, cook1Queue, cook2Queue, cook3Queue, cookDispatcherQueue, orderReadModel };
             queues = new List<IMonitorableQueue>() { managerQueue, cashierQueue, assistantManagerQueue, cook1Queue, cook2Queue, cook3Queue, cookDispatcherQueue };
             startable.ForEach(s => s.Start());
 
@@ -80,14 +79,16 @@ namespace Restaurant.Host
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
+            bus.SubscribeToAll<OrderPlaced>(orderReadModel);
+            bus.SubscribeToAll<OrderCooked>(orderReadModel);
+            bus.SubscribeToAll<OrderPriced>(orderReadModel);
+            bus.SubscribeToAll<OrderPaid>(orderReadModel);
+            bus.SubscribeToAll<OrderCompleted>(orderReadModel);
+
             for (int i = 0; i <= 20; i++)
             {
                 Customer cust = new Customer(bus, waiter, cashier);
-                var orderId = cust.PlaceOrder();
-                //bus.SubscribleToCorrelationId<OrderPlaced>(orderId, orderStatusBoard);
-                //bus.SubscribleToCorrelationId<OrderCooked>(orderId, orderStatusBoard);
-                //bus.SubscribleToCorrelationId<OrderPriced>(orderId, orderStatusBoard);
-                //bus.SubscribleToCorrelationId<OrderPaid>(orderId, orderStatusBoard);
+                cust.PlaceOrder();
             }
 
             Console.ReadLine();

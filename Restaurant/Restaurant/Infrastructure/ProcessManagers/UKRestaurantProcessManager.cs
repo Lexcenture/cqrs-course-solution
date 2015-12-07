@@ -1,5 +1,6 @@
 ﻿using System;
 using Restaurant.Actors;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages.Commands;
 using Restaurant.Messages.Events;
 

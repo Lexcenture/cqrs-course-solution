@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Restaurant.Messages;
 
-namespace Restaurant.Infrastructure
+namespace Restaurant.Infrastructure.Dispatchers
 {
     public class Bus
     {
-        //private Dictionary<string, List<IHandleOrder>> subscriptions = new Dictionary<string, List<IHandleOrder>>();
-         
         private Dictionary<string, Dictionary<int,Action<Message>>> _subscription;
-        private int subCount;
-        private readonly Object synclock = new object();
+        private int _subscriptionCount;
+        private readonly Object _synclock = new object();
+
+        private const string AllTopic = "All";
 
         public Bus()
         {
@@ -25,6 +25,7 @@ namespace Restaurant.Infrastructure
 
             var correlationId = message.CorrelationId.ToString();
             Publish(correlationId, message);
+            Publish(AllTopic, message);
         }
 
         private void Publish<T>(string topic, T message) where T : Message
@@ -38,7 +39,7 @@ namespace Restaurant.Infrastructure
 
         public void UnsubscribeFromCorrelationId(Guid correlationId, int token)
         {
-            lock (synclock)
+            lock (_synclock)
             {
                 var clonedSubscribers = CloneSubscriptions();
                 Dictionary<int,Action<Message>> currentSubscriptions;
@@ -63,13 +64,18 @@ namespace Restaurant.Infrastructure
             Subscribe(typeof(T).Name, handler);
         }
 
+        public int SubscribeToAll<T>(IHandle<T> handler) where T : Message
+        {
+            return Subscribe(AllTopic, handler);
+        }
+
         private int Subscribe<T>(string topic, IHandle<T> handler) where T : Message
         {
-            lock (synclock)
+            lock (_synclock)
             {
                 var clonedSubscribers = CloneSubscriptions();
                 Dictionary<int,Action<Message>> currentSubscriptions;
-                subCount++;
+                _subscriptionCount++;
                 if (!clonedSubscribers.TryGetValue(topic, out currentSubscriptions))
                 {
                     currentSubscriptions = new Dictionary<int, Action<Message>>();
@@ -82,10 +88,10 @@ namespace Restaurant.Infrastructure
                     if (message != null) handler.Handle(message);
                 };
 
-                currentSubscriptions.Add(subCount, action);
+                currentSubscriptions.Add(_subscriptionCount, action);
                 _subscription = clonedSubscribers;
             }
-            return subCount;
+            return _subscriptionCount;
         }
 
         private Dictionary<string, Dictionary<int,Action<Message>>> CloneSubscriptions()

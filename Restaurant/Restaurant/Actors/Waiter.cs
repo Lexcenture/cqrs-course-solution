@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Restaurant.DomainModel;
 using Restaurant.Infrastructure;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages.Events;
 
 namespace Restaurant.Actors

@@ -13,7 +13,7 @@ namespace Restaurant.Actors
         public void Handle(OrderCompleted orderCompleted)
         {
             OrderDocument order = orderCompleted.Order;
-            Console.WriteLine("Order completed: {0}", orderCompleted.CorrelationId);
+            //Console.WriteLine("Order completed: {0}", orderCompleted.CorrelationId);
             count++;
             total += order.Total;
         }

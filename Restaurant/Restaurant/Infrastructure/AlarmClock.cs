@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Restaurant.Actors;
+using Restaurant.Infrastructure.Dispatchers;
 using Restaurant.Messages;
 
 namespace Restaurant.Infrastructure
